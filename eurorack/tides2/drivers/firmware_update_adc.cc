@@ -31,7 +31,7 @@
 
 #include <stm32f37x_conf.h>
 
-namespace tides {
+namespace tides2 {
 
 void FirmwareUpdateAdc::Init() {
   // Enable ADC clock.

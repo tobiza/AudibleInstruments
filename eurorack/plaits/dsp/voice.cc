@@ -27,14 +27,14 @@
 // Main synthesis voice.
 
 #include "plaits/dsp/voice.h"
-#include "plaits/user_data.h"
 
 namespace plaits {
 
 using namespace std;
 using namespace stmlib;
 
-void Voice::Init(BufferAllocator* allocator) {
+void Voice::Init(BufferAllocator* allocator, UserData* user_data) {
+  user_data_ = user_data;
   engines_.Init();
 
   engines_.RegisterInstance(&virtual_analog_vcf_engine_, false, 1.0f, 1.0f);
@@ -126,8 +126,8 @@ void Voice::Render(
   Engine* e = engines_.get(engine_index);
   
   if (engine_index != previous_engine_index_ || reload_user_data_) {
-    UserData user_data;
-    const uint8_t* data = user_data.ptr(engine_index);
+    //UserData user_data;
+    const uint8_t* data = user_data_ ? user_data_->ptr(engine_index) : NULL;
     if (!data && engine_index >= 2 && engine_index <= 4) {
       data = fm_patches_table[engine_index - 2];
     }

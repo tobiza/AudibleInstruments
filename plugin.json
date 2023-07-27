@@ -47,6 +47,20 @@
       ]
     },
     {
+      "slug": "Tides",
+      "name": "Tidal Modulator",
+      "description": "Based on Mutable Instruments Tides",
+      "manualUrl": "https://mutable-instruments.net/modules/tides1/manual/",
+      "modularGridUrl": "https://www.modulargrid.net/e/mutable-instruments-tides-2014-version",
+      "tags": [
+        "LFO",
+        "Oscillator",
+        "Waveshaper",
+        "Function generator",
+        "Hardware clone"
+      ]
+    },
+    {
       "slug": "Tides2",
       "name": "Tidal Modulator 2",
       "description": "Based on Mutable Instruments Tides",

@@ -28,7 +28,7 @@
 
 #include "tides2/drivers/debug_port.h"
 
-namespace tides {
+namespace tides2 {
 
 void DebugPort::Init() {
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);

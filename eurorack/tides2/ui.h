@@ -38,7 +38,7 @@
 
 #include "tides2/settings.h"
 
-namespace tides {
+namespace tides2 {
 
 enum UiMode {
   UI_MODE_NORMAL,

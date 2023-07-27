@@ -38,7 +38,7 @@
 
 #include "tides2/ramp/ratio.h"
 
-namespace tides {
+namespace tides2 {
   
 enum RampMode {
   RAMP_MODE_AD,

@@ -32,7 +32,7 @@
 
 #include "stmlib/stmlib.h"
 
-namespace tides {
+namespace tides2 {
 
 class FirmwareUpdateAdc {
  public:

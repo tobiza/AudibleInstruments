@@ -31,7 +31,7 @@
 
 #include "stmlib/stmlib.h"
 
-namespace tides {
+namespace tides2 {
 
 enum Led {
   LED_RANGE,

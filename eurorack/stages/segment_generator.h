@@ -206,7 +206,7 @@ class SegmentGenerator {
   
   ProcessFn process_fn_;
   
-  tides::RampExtractor ramp_extractor_;
+  tides2::RampExtractor ramp_extractor_;
   stmlib::HysteresisQuantizer2 function_quantizer_;
   
   Segment segments_[kMaxNumSegments + 1];  // There's a sentinel!

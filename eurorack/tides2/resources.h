@@ -38,7 +38,7 @@
 
 
 
-namespace tides {
+namespace tides2 {
 
 typedef uint8_t ResourceId;
 

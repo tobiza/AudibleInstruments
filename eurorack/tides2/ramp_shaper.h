@@ -36,7 +36,7 @@
 
 #include "tides2/ramp_generator.h"
 
-namespace tides {
+namespace tides2 {
 
 class RampShaper {
  public:

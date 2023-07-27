@@ -30,7 +30,7 @@
 
 #include <stm32f37x_conf.h>
 
-namespace tides {
+namespace tides2 {
 
 void System::Init(bool application) {
   NVIC_SetVectorTable(NVIC_VectTab_FLASH, application ? 0x8000 : 0x0000);

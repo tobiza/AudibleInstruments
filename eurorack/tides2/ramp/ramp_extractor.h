@@ -42,7 +42,7 @@
 
 #include "tides2/ramp/ratio.h"
 
-namespace tides {
+namespace tides2 {
 
 const int kMaxPatternPeriod = 8;
 

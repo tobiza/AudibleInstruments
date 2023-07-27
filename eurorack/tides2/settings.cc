@@ -33,7 +33,7 @@
 
 #include "stmlib/system/storage.h"
 
-namespace tides {
+namespace tides2 {
 
 using namespace std;
 

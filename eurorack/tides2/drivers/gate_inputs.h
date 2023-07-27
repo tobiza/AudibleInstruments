@@ -33,7 +33,7 @@
 
 #include "tides2/io_buffer.h"
 
-namespace tides {
+namespace tides2 {
   
 class GateInputs {
  public:

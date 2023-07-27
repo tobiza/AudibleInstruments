@@ -38,7 +38,7 @@
 #include "tides2/ramp_shaper.h"
 #include "tides2/resources.h"
 
-namespace tides {
+namespace tides2 {
 
 #define INSTANTIATE(x, y, z) \
   render_fn_table_[x][y][z] = &PolySlopeGenerator::RenderInternal<x, y, z>;

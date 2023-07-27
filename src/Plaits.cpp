@@ -15,7 +15,8 @@
 #include <fstream>
 #include <iterator>
 
-static const char WAVE_FILTERS[] = "WAV (.wav):wav,WAV; BIN (*.bin):bin, BIN";
+//static const char WAVE_FILTERS[] = "WAV (.wav):wav,WAV; BIN (*.bin):bin, BIN";
+static const char WAVE_FILTERS[] = "BIN (*.bin):bin, BIN";
 static std::string waveDir;
 
 struct Plaits : Module {
@@ -56,6 +57,7 @@ struct Plaits : Module {
 
 	plaits::Voice voice[16];
 	plaits::Patch patch = {};
+	plaits::UserData user_data;
 	char shared_buffer[16][16384] = {};
 	float triPhase = 0.f;
 
@@ -96,7 +98,7 @@ struct Plaits : Module {
 
 		for (int i = 0; i < 16; i++) {
 			stmlib::BufferAllocator allocator(shared_buffer[i], sizeof(shared_buffer[i]));
-			voice[i].Init(&allocator);
+			voice[i].Init(&allocator, &user_data);
 		}
 
 		onReset();
@@ -278,6 +280,13 @@ struct Plaits : Module {
 	}
 
 	void reset() {
+			bool success = user_data.Save(nullptr, patch.engine);
+			if (success) {
+				DEBUG("load - SUCCESS");
+				for (int c = 0; c < 16; c++) {
+					voice[c].ReloadUserData();
+				}
+			}
 	}
 
 	void load(std::string path) {
@@ -285,8 +294,6 @@ struct Plaits : Module {
 		DEFER({loading = false;});
 		// HACK Sleep 100us so DSP thread is likely to finish processing before we resize the vector
 		std::this_thread::sleep_for(std::chrono::duration<double>(100e-6));
-
-		std::vector<float> samples;
 
 		std::string ext = string::lowercase(system::getExtension(path));
 /*		if (ext == ".wav") {
@@ -388,9 +395,7 @@ struct Plaits : Module {
 			DEBUG("load - size: %llu", buffer.size());
 
 			uint8_t* rx_buffer = buffer.data();
-			int slot = patch.engine;
-			plaits::UserData user_data;
-			bool success = user_data.Save(rx_buffer, slot);
+			bool success = user_data.Save(rx_buffer, patch.engine);
 			if (success) {
 				DEBUG("load - SUCCESS");
 				for (int c = 0; c < 16; c++) {
@@ -400,10 +405,8 @@ struct Plaits : Module {
 		}
 	}
 
-	void loadDialog(unsigned int type) {
+	void loadDialog() {
 		osdialog_filters* filters = osdialog_filters_parse(WAVE_FILTERS);
-		DEFER({osdialog_filters_free(filters);});
-
 		char* pathC = osdialog_file(OSDIALOG_OPEN, waveDir.empty() ? NULL : waveDir.c_str(), NULL, filters);
 		if (!pathC) {
 			// Fail silently
@@ -416,7 +419,6 @@ struct Plaits : Module {
 		DEBUG("loadDialog - path: %s", path.c_str());
 
 		load(path);
-		//filename = system::getFilename(path);
 	}
 };
 
@@ -515,31 +517,13 @@ struct PlaitsWidget : ModuleWidget {
 
 		menu->addChild(new MenuSeparator);
 
-		menu->addChild(createMenuItem("Initialize custom data", "",
+		menu->addChild(createMenuItem("Reset custom data for current engine", "",
 			[=]() {module->reset();}
 		));
 
-		menu->addChild(createSubmenuItem("Load", "", [=](Menu* menu) {
-			menu->addChild(createMenuItem("FM 1", "",
-				[=]() {module->loadDialog(0);}
-			));
-
-			menu->addChild(createMenuItem("FM 2", "",
-				[=]() {module->loadDialog(1);}
-			));
-
-			menu->addChild(createMenuItem("FM 3", "",
-				[=]() {module->loadDialog(2);}
-			));
-
-			menu->addChild(createMenuItem("Wave terrain", "",
-				[=]() {module->loadDialog(10);}
-			));
-
-			menu->addChild(createMenuItem("Wavetable", "",
-				[=]() {module->loadDialog(20);}
-			));
-		}));
+		menu->addChild(createMenuItem("Load custom data for current engine", "",
+			[=]() {module->loadDialog();}
+		));
 
 		menu->addChild(new MenuSeparator);
 

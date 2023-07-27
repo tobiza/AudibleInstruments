@@ -32,7 +32,7 @@
 #include "stmlib/stmlib.h"
 #include "stmlib/dsp/dsp.h"
 
-namespace tides {
+namespace tides2 {
 
 class CvReaderChannel {
  public:

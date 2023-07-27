@@ -12,7 +12,7 @@ static const float kRootScaled[3] = {
 	130.81f
 };
 
-static const tides::Ratio kRatios[20] = {
+static const tides2::Ratio kRatios[20] = {
 	{ 0.0625f, 16 },
 	{ 0.125f, 8 },
 	{ 0.1666666f, 6 },
@@ -76,27 +76,27 @@ struct Tides2 : Module {
 		NUM_LIGHTS
 	};
 
-	tides::PolySlopeGenerator poly_slope_generator;
-	tides::RampExtractor ramp_extractor;
+	tides2::PolySlopeGenerator poly_slope_generator;
+	tides2::RampExtractor ramp_extractor;
 	stmlib::HysteresisQuantizer ratio_index_quantizer;
 
 	// State
 	int range;
-	tides::OutputMode output_mode;
-	tides::RampMode ramp_mode;
+	tides2::OutputMode output_mode;
+	tides2::RampMode ramp_mode;
 	dsp::BooleanTrigger rangeTrigger;
 	dsp::BooleanTrigger modeTrigger;
 	dsp::BooleanTrigger rampTrigger;
 
 	// Buffers
-	tides::PolySlopeGenerator::OutputSample out[tides::kBlockSize] = {};
-	stmlib::GateFlags trig_flags[tides::kBlockSize] = {};
-	stmlib::GateFlags clock_flags[tides::kBlockSize] = {};
+	tides2::PolySlopeGenerator::OutputSample out[tides2::kBlockSize] = {};
+	stmlib::GateFlags trig_flags[tides2::kBlockSize] = {};
+	stmlib::GateFlags clock_flags[tides2::kBlockSize] = {};
 	stmlib::GateFlags previous_trig_flag = stmlib::GATE_FLAG_LOW;
 	stmlib::GateFlags previous_clock_flag = stmlib::GATE_FLAG_LOW;
 
 	bool must_reset_ramp_extractor = true;
-	tides::OutputMode previous_output_mode = tides::OUTPUT_MODE_GATES;
+	tides2::OutputMode previous_output_mode = tides2::OUTPUT_MODE_GATES;
 	uint8_t frame = 0;
 
 	Tides2() {
@@ -139,14 +139,14 @@ struct Tides2 : Module {
 
 	void onReset() override {
 		range = 1;
-		output_mode = tides::OUTPUT_MODE_GATES;
-		ramp_mode = tides::RAMP_MODE_LOOPING;
+		output_mode = tides2::OUTPUT_MODE_GATES;
+		ramp_mode = tides2::RAMP_MODE_LOOPING;
 	}
 
 	void onRandomize() override {
 		range = random::u32() % 3;
-		output_mode = (tides::OutputMode)(random::u32() % 4);
-		ramp_mode = (tides::RampMode)(random::u32() % 3);
+		output_mode = (tides2::OutputMode)(random::u32() % 4);
+		ramp_mode = (tides2::RampMode)(random::u32() % 3);
 	}
 
 	void onSampleRateChange() override {
@@ -170,11 +170,11 @@ struct Tides2 : Module {
 
 		json_t* outputJ = json_object_get(rootJ, "output");
 		if (outputJ)
-			output_mode = (tides::OutputMode) json_integer_value(outputJ);
+			output_mode = (tides2::OutputMode) json_integer_value(outputJ);
 
 		json_t* rampJ = json_object_get(rootJ, "ramp");
 		if (rampJ)
-			ramp_mode = (tides::RampMode) json_integer_value(rampJ);
+			ramp_mode = (tides2::RampMode) json_integer_value(rampJ);
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -183,10 +183,10 @@ struct Tides2 : Module {
 			range = (range + 1) % 3;
 		}
 		if (modeTrigger.process(params[MODE_PARAM].getValue() > 0.f)) {
-			output_mode = (tides::OutputMode)((output_mode + 1) % 4);
+			output_mode = (tides2::OutputMode)((output_mode + 1) % 4);
 		}
 		if (rampTrigger.process(params[RAMP_PARAM].getValue() > 0.f)) {
-			ramp_mode = (tides::RampMode)((ramp_mode + 1) % 3);
+			ramp_mode = (tides2::RampMode)((ramp_mode + 1) % 3);
 		}
 
 		// Input gates
@@ -197,15 +197,15 @@ struct Tides2 : Module {
 		previous_clock_flag = clock_flags[frame];
 
 		// Process block
-		if (++frame >= tides::kBlockSize) {
+		if (++frame >= tides2::kBlockSize) {
 			frame = 0;
 
-			tides::Range range_mode = (range < 2) ? tides::RANGE_CONTROL : tides::RANGE_AUDIO;
+			tides2::Range range_mode = (range < 2) ? tides2::RANGE_CONTROL : tides2::RANGE_AUDIO;
 			float note = clamp(params[FREQUENCY_PARAM].getValue() + 12.f * inputs[V_OCT_INPUT].getVoltage(), -96.f, 96.f);
 			float fm = clamp(params[FREQUENCY_CV_PARAM].getValue() * inputs[FREQUENCY_INPUT].getVoltage() * 12.f, -96.f, 96.f);
 			float transposition = note + fm;
 
-			float ramp[tides::kBlockSize];
+			float ramp[tides2::kBlockSize];
 			float frequency;
 
 			if (inputs[CLOCK_INPUT].isConnected()) {
@@ -213,14 +213,14 @@ struct Tides2 : Module {
 					ramp_extractor.Reset();
 				}
 
-				tides::Ratio r = ratio_index_quantizer.Lookup(kRatios, 0.5f + transposition * 0.0105f, 20);
+				tides2::Ratio r = ratio_index_quantizer.Lookup(kRatios, 0.5f + transposition * 0.0105f, 20);
 				frequency = ramp_extractor.Process(
-				              range_mode == tides::RANGE_AUDIO,
-				              range_mode == tides::RANGE_AUDIO && ramp_mode == tides::RAMP_MODE_AR,
+				              range_mode == tides2::RANGE_AUDIO,
+				              range_mode == tides2::RANGE_AUDIO && ramp_mode == tides2::RAMP_MODE_AR,
 				              r,
 				              clock_flags,
 				              ramp,
-				              tides::kBlockSize);
+				              tides2::kBlockSize);
 				must_reset_ramp_extractor = false;
 			}
 			else {
@@ -252,15 +252,15 @@ struct Tides2 : Module {
 			  trig_flags,
 			  !inputs[TRIG_INPUT].isConnected() && inputs[CLOCK_INPUT].isConnected() ? ramp : NULL,
 			  out,
-			  tides::kBlockSize);
+			  tides2::kBlockSize);
 
 			// Set lights
 			lights[RANGE_LIGHT + 0].value = (range == 0 || range == 1);
 			lights[RANGE_LIGHT + 1].value = (range == 1 || range == 2);
-			lights[OUTPUT_MODE_LIGHT + 0].value = (output_mode == tides::OUTPUT_MODE_AMPLITUDE || output_mode == tides::OUTPUT_MODE_SLOPE_PHASE);
-			lights[OUTPUT_MODE_LIGHT + 1].value = (output_mode == tides::OUTPUT_MODE_FREQUENCY || output_mode == tides::OUTPUT_MODE_SLOPE_PHASE);
-			lights[RAMP_MODE_LIGHT + 0].value = (ramp_mode == tides::RAMP_MODE_AD || ramp_mode == tides::RAMP_MODE_LOOPING);
-			lights[RAMP_MODE_LIGHT + 1].value = (ramp_mode == tides::RAMP_MODE_AR || ramp_mode == tides::RAMP_MODE_LOOPING);
+			lights[OUTPUT_MODE_LIGHT + 0].value = (output_mode == tides2::OUTPUT_MODE_AMPLITUDE || output_mode == tides2::OUTPUT_MODE_SLOPE_PHASE);
+			lights[OUTPUT_MODE_LIGHT + 1].value = (output_mode == tides2::OUTPUT_MODE_FREQUENCY || output_mode == tides2::OUTPUT_MODE_SLOPE_PHASE);
+			lights[RAMP_MODE_LIGHT + 0].value = (ramp_mode == tides2::RAMP_MODE_AD || ramp_mode == tides2::RAMP_MODE_LOOPING);
+			lights[RAMP_MODE_LIGHT + 1].value = (ramp_mode == tides2::RAMP_MODE_AR || ramp_mode == tides2::RAMP_MODE_LOOPING);
 		}
 
 		// Outputs

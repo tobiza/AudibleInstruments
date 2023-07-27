@@ -31,91 +31,51 @@
 
 #include "stmlib/stmlib.h"
 
-#ifdef TEST
-
-#include <cstdio>
-
-// Mock flash saving functions for debugging purposes.
-#define PAGE_SIZE 0x800
-
-inline void FLASH_Unlock() { }
-
-inline void FLASH_ErasePage(uint32_t address) {
-  printf("--- Erasing page at %08x ---\n", address);
-}
-
-inline void FLASH_ProgramWord(uint32_t address, uint32_t word) {
-  if (address % 32 == 0) {
-    printf("%08x ", address);
-  }
-  printf(
-      "%08x ",
-      (word >> 24) | ((word & 0x00ff0000) >> 8) | ((word & 0x0000ff00) << 8) | (word << 24));
-  if (address % 32 == 28) {
-    printf("\n");
-  }
-}
-
-#else
-
-#include <stm32f37x_conf.h>
-#include "stmlib/system/flash_programming.h"
-
-#endif  // TEST
-
 #include <cstring>
+
+#include "plugin.hpp"
 
 namespace plaits {
 
-static uint8_t m_buffer[0x1000];
-
 class UserData {
- public:
-  enum {
-    ADDRESS = 0x08007000,
-    SIZE = 0x1000
-  };
+private:
+  static const size_t MAX_USER_DATA_SIZE = 4096; // 0x1000
 
-  UserData() { }
+  uint8_t m_buffer[MAX_USER_DATA_SIZE];
+
+public:
+  UserData() {
+    for (size_t i = 0; i < MAX_USER_DATA_SIZE; ++i) {
+      m_buffer[i] = 0;
+    }
+  }
   ~UserData() { }
 
-#ifdef TEST  
   inline const uint8_t* ptr(int slot) const {
-    //return NULL;
-    return m_buffer;
-  }
-#else
-  inline const uint8_t* ptr(int slot) const {
-    const uint8_t* data = (const uint8_t*)(ADDRESS);
-    if (data[SIZE - 2] == 'U' && data[SIZE - 1] == (' ' + slot)) {
-      return data;
+    if (m_buffer[MAX_USER_DATA_SIZE - 2] == 'U' && m_buffer[MAX_USER_DATA_SIZE - 1] == (' ' + slot)) {
+      return m_buffer;
     } else {
       return NULL;
     }
   }
-#endif  // TEST
   
   inline bool Save(uint8_t* rx_buffer, int slot) {
+    // TODO: adapt the plaits editor to write this into the bin file.
+    // Currently it is only written into the wav file.
     /*if (slot < rx_buffer[SIZE - 2] || slot > rx_buffer[SIZE - 1]) {
       return false;
     }*/
-    
-    // Tag the data to identify which engine it should be associated to.
-    rx_buffer[SIZE - 2] = 'U';
-    rx_buffer[SIZE - 1] = ' ' + slot;
 
-    memcpy(m_buffer, rx_buffer, SIZE*sizeof(uint8_t));
-
-    // Write to FLASH.
-    /*const uint32_t* words = static_cast<const uint32_t*>(
-        static_cast<const void*>(rx_buffer));
-    for (uint32_t i = ADDRESS; i < ADDRESS + SIZE; i += 4) {
-      if (i % PAGE_SIZE == 0) {
-        FLASH_Unlock();
-        FLASH_ErasePage(i);
+    if (rx_buffer == NULL) {
+      for (size_t i = 0; i < MAX_USER_DATA_SIZE; ++i) {
+        m_buffer[i] = 0;
       }
-      FLASH_ProgramWord(i, *words++);
-    }*/
+    } else {
+      memcpy(m_buffer, rx_buffer, MAX_USER_DATA_SIZE * sizeof(uint8_t));
+      m_buffer[MAX_USER_DATA_SIZE - 2] = 'U';
+      m_buffer[MAX_USER_DATA_SIZE - 1] = ' ' + slot;
+    }
+
     return true;
   }
 };

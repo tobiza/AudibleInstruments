@@ -31,7 +31,7 @@
 
 #include "stmlib/stmlib.h"
 
-namespace tides {
+namespace tides2 {
 
 enum CvAdcChannel {
   CV_ADC_CHANNEL_V_OCT,

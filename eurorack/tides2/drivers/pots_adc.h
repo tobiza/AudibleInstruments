@@ -31,7 +31,7 @@
 
 #include "stmlib/stmlib.h"
 
-namespace tides {
+namespace tides2 {
 
 enum PotsAdcChannel {
   POTS_ADC_CHANNEL_POT_FREQUENCY,

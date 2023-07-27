@@ -30,7 +30,7 @@
 
 #include <stm32f37x_conf.h>
 
-namespace tides {
+namespace tides2 {
 
 struct ChannelConfiguration {
   int map_to;

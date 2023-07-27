@@ -35,7 +35,7 @@
 
 #include "tides2/io_buffer.h"
 
-namespace tides {
+namespace tides2 {
 
 const size_t kMaxDacBlockSize = 4;
 

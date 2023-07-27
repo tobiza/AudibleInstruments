@@ -64,6 +64,8 @@
 
 #include "plaits/dsp/fx/low_pass_gate.h"
 
+#include "plaits/user_data.h"
+
 namespace plaits {
 
 const int kMaxEngines = 24;
@@ -166,7 +168,7 @@ class Voice {
     short aux;
   };
   
-  void Init(stmlib::BufferAllocator* allocator);
+  void Init(stmlib::BufferAllocator* allocator, UserData* user_data);
   void ReloadUserData() {
     reload_user_data_ = true;
   }
@@ -228,6 +230,8 @@ class Voice {
   ChiptuneEngine chiptune_engine_;
 
   stmlib::HysteresisQuantizer2 engine_quantizer_;
+
+  UserData* user_data_;
   
   bool reload_user_data_;
   int previous_engine_index_;

@@ -34,7 +34,7 @@
 
 #include <algorithm>
 
-namespace tides {
+namespace tides2 {
 
 const size_t kNumBlocks = 2;
 const size_t kBlockSize = 8;

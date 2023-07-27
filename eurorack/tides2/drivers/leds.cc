@@ -32,7 +32,7 @@
 
 #include <stm32f37x_conf.h>
 
-namespace tides {
+namespace tides2 {
 
 using namespace std;
 

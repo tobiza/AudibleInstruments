@@ -30,7 +30,7 @@
 
 #include <algorithm>
 
-namespace tides {
+namespace tides2 {
 
 /* static */
 Dac* Dac::instance_;

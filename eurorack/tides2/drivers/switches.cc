@@ -30,7 +30,7 @@
 
 #include <algorithm>
 
-namespace tides {
+namespace tides2 {
 
 using namespace std;
 

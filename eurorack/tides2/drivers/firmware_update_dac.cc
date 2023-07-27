@@ -29,7 +29,7 @@
 
 #include "tides2/drivers/firmware_update_dac.h"
 
-namespace tides {
+namespace tides2 {
 
 /* static */
 FirmwareUpdateDac* FirmwareUpdateDac::instance_;

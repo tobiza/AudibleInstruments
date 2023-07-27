@@ -328,7 +328,7 @@ void SegmentGenerator::ProcessClockedSampleAndHold(
   }
 }
 
-tides::Ratio divider_ratios[] = {
+tides2::Ratio divider_ratios[] = {
   { 0.249999f, 4 },
   { 0.333333f, 3 },
   { 0.499999f, 2 },
@@ -381,7 +381,7 @@ void SegmentGenerator::ProcessOscillator(
   const float root_note = audio_rate ? 261.6255616f : 2.0439497f;
   float ramp[size];
   
-  tides::Ratio r = { 1.0f, 1 };
+  tides2::Ratio r = { 1.0f, 1 };
   if (gate_flags) {
     r = function_quantizer_.Lookup(
         divider_ratios,

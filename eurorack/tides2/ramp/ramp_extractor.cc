@@ -40,7 +40,7 @@
 
 #include "stmlib/dsp/dsp.h"
 
-namespace tides {
+namespace tides2 {
 
 using namespace std;
 using namespace stmlib;
