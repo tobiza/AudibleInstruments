@@ -33,6 +33,8 @@
 
 #ifdef TEST
 
+#include <cstdio>
+
 // Mock flash saving functions for debugging purposes.
 #define PAGE_SIZE 0x800
 
@@ -61,7 +63,11 @@ inline void FLASH_ProgramWord(uint32_t address, uint32_t word) {
 
 #endif  // TEST
 
+#include <cstring>
+
 namespace plaits {
+
+static uint8_t m_buffer[0x1000];
 
 class UserData {
  public:
@@ -75,7 +81,8 @@ class UserData {
 
 #ifdef TEST  
   inline const uint8_t* ptr(int slot) const {
-    return NULL;
+    //return NULL;
+    return m_buffer;
   }
 #else
   inline const uint8_t* ptr(int slot) const {
@@ -89,16 +96,18 @@ class UserData {
 #endif  // TEST
   
   inline bool Save(uint8_t* rx_buffer, int slot) {
-    if (slot < rx_buffer[SIZE - 2] || slot > rx_buffer[SIZE - 1]) {
+    /*if (slot < rx_buffer[SIZE - 2] || slot > rx_buffer[SIZE - 1]) {
       return false;
-    }
+    }*/
     
     // Tag the data to identify which engine it should be associated to.
     rx_buffer[SIZE - 2] = 'U';
     rx_buffer[SIZE - 1] = ' ' + slot;
 
+    memcpy(m_buffer, rx_buffer, SIZE*sizeof(uint8_t));
+
     // Write to FLASH.
-    const uint32_t* words = static_cast<const uint32_t*>(
+    /*const uint32_t* words = static_cast<const uint32_t*>(
         static_cast<const void*>(rx_buffer));
     for (uint32_t i = ADDRESS; i < ADDRESS + SIZE; i += 4) {
       if (i % PAGE_SIZE == 0) {
@@ -106,7 +115,7 @@ class UserData {
         FLASH_ErasePage(i);
       }
       FLASH_ProgramWord(i, *words++);
-    }
+    }*/
     return true;
   }
 };

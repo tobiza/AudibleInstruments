@@ -9,7 +9,7 @@ extern Plugin* pluginInstance;
 extern Model* modelBraids;
 extern Model* modelPlaits;
 extern Model* modelElements;
-extern Model* modelTides;
+//extern Model* modelTides;
 extern Model* modelTides2;
 extern Model* modelClouds;
 extern Model* modelWarps;

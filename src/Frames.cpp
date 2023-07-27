@@ -144,7 +144,7 @@ struct Frames : Module {
 		for (int i = 0; i < 4; i++) {
 			if (poly_lfo_mode) {
 				// gains[i] = poly_lfo.level(i) / 255.0;
-				gains[i] = poly_lfo.level16(i) / 65535.0;
+				gains[i] = poly_lfo.level(i) / 65535.0;
 			}
 			else {
 				float lin = keyframer.level(i) / 65535.0;

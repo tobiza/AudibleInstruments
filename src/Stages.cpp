@@ -212,9 +212,9 @@ struct Stages : Module {
 	}
 
 	void onSampleRateChange() override {
-		for (int i = 0; i < NUM_CHANNELS; i++) {
+		/*for (int i = 0; i < NUM_CHANNELS; i++) {
 			segment_generator[i].SetSampleRate(APP->engine->getSampleRate());
-		}
+		}*/
 	}
 
 	void stepBlock() {

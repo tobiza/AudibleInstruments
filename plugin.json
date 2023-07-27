@@ -1,6 +1,6 @@
 {
-  "slug": "AudibleInstruments",
-  "name": "Audible Instruments",
+  "slug": "AudibleInstrumentsT",
+  "name": "Audible Instruments T",
   "version": "2.0.0",
   "license": "GPL-3.0-or-later",
   "author": "VCV",
@@ -43,20 +43,6 @@
       "modularGridUrl": "https://www.modulargrid.net/e/mutable-instruments-elements",
       "tags": [
         "Physical modeling",
-        "Hardware clone"
-      ]
-    },
-    {
-      "slug": "Tides",
-      "name": "Tidal Modulator",
-      "description": "Based on Mutable Instruments Tides",
-      "manualUrl": "https://mutable-instruments.net/modules/tides1/manual/",
-      "modularGridUrl": "https://www.modulargrid.net/e/mutable-instruments-tides-2014-version",
-      "tags": [
-        "LFO",
-        "Oscillator",
-        "Waveshaper",
-        "Function generator",
         "Hardware clone"
       ]
     },
