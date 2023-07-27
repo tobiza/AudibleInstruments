@@ -15,7 +15,6 @@
 #include <fstream>
 #include <iterator>
 
-//static const char WAVE_FILTERS[] = "WAV (.wav):wav,WAV; BIN (*.bin):bin, BIN";
 static const char WAVE_FILTERS[] = "BIN (*.bin):bin, BIN";
 static std::string waveDir;
 
@@ -194,15 +193,6 @@ struct Plaits : Module {
 				lights[MODEL_LIGHT + lightId].setBrightness(brightness);
 			}
 
-			/*
-			lights[MODEL_LIGHT + 0].setBrightness(1.f); // green
-
-			lights[MODEL_LIGHT + 2].setBrightness(1.f); // yellow
-			lights[MODEL_LIGHT + 3].setBrightness(1.f); // yellow
-
-			lights[MODEL_LIGHT + 5].setBrightness(1.f); // red
-			*/
-
 			// Calculate pitch for lowCpu mode if needed
 			float pitch = params[FREQ_PARAM].getValue();
 			if (lowCpu)
@@ -282,7 +272,6 @@ struct Plaits : Module {
 	void reset() {
 			bool success = user_data.Save(nullptr, patch.engine);
 			if (success) {
-				DEBUG("load - SUCCESS");
 				for (int c = 0; c < 16; c++) {
 					voice[c].ReloadUserData();
 				}
@@ -296,108 +285,13 @@ struct Plaits : Module {
 		std::this_thread::sleep_for(std::chrono::duration<double>(100e-6));
 
 		std::string ext = string::lowercase(system::getExtension(path));
-/*		if (ext == ".wav") {
-			// Load WAV
-			drwav wav;
-#if defined ARCH_WIN
-			if (!drwav_init_file_w(&wav, string::UTF8toUTF16(path).c_str(), NULL))
-#else
-			if (!drwav_init_file(&wav, path.c_str(), NULL))
-#endif
-				return;
-
-			size_t len = wav.totalPCMFrameCount * wav.channels;
-			DEBUG("load - len: %llu", len);
-			if (len == 0)
-				return;
-
-			samples.clear();
-			samples.resize(len);
-
-			drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, samples.data());
-			drwav_uninit(&wav);
-
-			DEBUG("load - samples: %llu - SIZE: %i", samples.size(), plaits::UserData::SIZE);
-
-			plaits::UserDataReceiver user_data_receiver;
-			user_data_receiver.Init(
-				(uint8_t*)(&shared_buffer[0][16384 - plaits::UserData::SIZE]),
-				plaits::UserData::SIZE);
-
-
-
-			plaits::AdaptiveThreshold threshold;
-			threshold.Init(0.001f, 0.005f);
-			plaits::Demodulator<9, 5, 2> demodulator;
-			demodulator.Sync();
-
-			std::vector<int> symbolCount(256);
-
-			for(std::size_t i = 0; i < 10000; ++i) {
-				float sample = samples[i];
-				bool sign = threshold.ProcessCosine(sample);
-				uint8_t symbol = demodulator.Process(sign);
-				symbolCount[symbol] += 1;
-
-				DEBUG("i: %llu - sample: %f - sign: %i - symbol: %u", i, sample, sign, symbol);
-			}
-
-			DEBUG("%i - %i - %i - %i - %i", symbolCount[0], symbolCount[1], symbolCount[2], symbolCount[3], symbolCount[255]);
-
-
-			bool done = false;
-			for(std::size_t i = 0; i < samples.size() && !done; ++i) {
-				float sample = samples[i] * 10.f;
-				stm_audio_bootloader::PacketDecoderState state = user_data_receiver.Process(sample);
-				DEBUG("load - sample: %f - state: %i", sample, state);
-				if (state == stm_audio_bootloader::PACKET_DECODER_STATE_END_OF_TRANSMISSION) {
-					DEBUG("load - PACKET_DECODER_STATE_END_OF_TRANSMISSION");
-					done = true;
-				} else if (state == stm_audio_bootloader::PACKET_DECODER_STATE_OK) {
-					DEBUG("load - PACKET_DECODER_STATE_OK - progress: %f", user_data_receiver.progress());
-				} else if (state == stm_audio_bootloader::PACKET_DECODER_STATE_ERROR_CRC) {
-					DEBUG("load - PACKET_DECODER_STATE_ERROR_CRC");
-				}
-			}
-
-
-			
-
-			for(std::size_t i = 0; i < samples.size(); ++i) {
-				float sample = (samples[i] / 2.f + 0.5f) * 256.f;
-				uint8_t convertedSample = (uint8_t) sample;
-
-				shared_buffer[0][16384 - plaits::UserData::SIZE + i] = convertedSample;
-			}
-
-
-			//uint8_t* rx_buffer = (uint8_t*)(&shared_buffer[0][16384 - plaits::UserData::SIZE]);
-			// plaits::UserData::SIZE
-
-			uint8_t* rx_buffer = user_data_receiver.rx_buffer();
-			int slot = patch.engine; //voice.active_engine();
-			plaits::UserData user_data;
-			bool success = user_data.Save(rx_buffer, slot);
-			if (success) {
-				DEBUG("load - SUCCESS");
-				for (int c = 0; c < 16; c++) {
-					voice[c].ReloadUserData();
-				}
-			}
-
-		} else */
 		
 		if (ext == ".bin") {
-			DEBUG("load - bin");	
 			std::ifstream input(path, std::ios::binary);
 			std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(input), {});
-
-			DEBUG("load - size: %llu", buffer.size());
-
 			uint8_t* rx_buffer = buffer.data();
 			bool success = user_data.Save(rx_buffer, patch.engine);
 			if (success) {
-				DEBUG("load - SUCCESS");
 				for (int c = 0; c < 16; c++) {
 					voice[c].ReloadUserData();
 				}
@@ -414,10 +308,8 @@ struct Plaits : Module {
 		}
 		std::string path = pathC;
 		std::free(pathC);
-		waveDir = system::getDirectory(path);
 
-		DEBUG("loadDialog - path: %s", path.c_str());
-
+ 		waveDir = system::getDirectory(path);
 		load(path);
 	}
 };

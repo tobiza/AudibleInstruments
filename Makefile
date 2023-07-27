@@ -1,6 +1,5 @@
 FLAGS += \
 	-DTEST \
-	-DARCH_WIN \
 	-I./eurorack \
 	-Wno-unused-local-typedefs
 
