@@ -125,6 +125,7 @@ struct Plaits : Module {
 
 		json_object_set_new(rootJ, "lowCpu", json_boolean(lowCpu));
 		json_object_set_new(rootJ, "model", json_integer(patch.engine));
+		json_object_set_new(rootJ, "frequencyMode", json_integer(frequencyMode));
 
 		const uint8_t* userDataBuffer = user_data.getBuffer();
 		if (userDataBuffer != nullptr) {
@@ -143,6 +144,10 @@ struct Plaits : Module {
 		json_t* modelJ = json_object_get(rootJ, "model");
 		if (modelJ)
 			patch.engine = json_integer_value(modelJ);
+
+		json_t* frequencyModeJ = json_object_get(rootJ, "frequencyMode");
+		if (frequencyModeJ)
+			frequencyMode = json_integer_value(frequencyModeJ);
 
 		json_t* userDataJ = json_object_get(rootJ, "userData");
 		if (userDataJ) {
