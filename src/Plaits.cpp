@@ -7,6 +7,7 @@
 #include "plaits/dsp/voice.h"
 //#include "plaits/user_data_receiver.h"
 #include "plaits/user_data.h"
+#include "stmlib/dsp/hysteresis_quantizer.h"
 #pragma GCC diagnostic pop
 
 #include <osdialog.h>
@@ -31,6 +32,7 @@ struct Plaits : Module {
 		MORPH_CV_PARAM,
 		LPG_COLOR_PARAM,
 		LPG_DECAY_PARAM,
+		FREQ_ROOT_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -59,6 +61,8 @@ struct Plaits : Module {
 	plaits::UserData user_data;
 	char shared_buffer[16][16384] = {};
 	float triPhase = 0.f;
+	int frequencyMode = 10;
+	stmlib::HysteresisQuantizer2 octaveQuantizer;
 
 	dsp::SampleRateConverter<16 * 2> outputSrc;
 	dsp::DoubleRingBuffer<dsp::Frame<16 * 2>, 256> outputBuffer;
@@ -74,6 +78,7 @@ struct Plaits : Module {
 		configButton(MODEL1_PARAM, "Previous model");
 		configButton(MODEL2_PARAM, "Next model");
 		configParam(FREQ_PARAM, -4.0, 4.0, 0.0, "Frequency", " semitones", 0.f, 12.f);
+		configParam(FREQ_ROOT_PARAM, -4.0, 4.0, 0.0, "Frequency Root", " semitones", 0.f, 12.f);
 		configParam(HARMONICS_PARAM, 0.0, 1.0, 0.5, "Harmonics", "%", 0.f, 100.f);
 		configParam(TIMBRE_PARAM, 0.0, 1.0, 0.5, "Timbre", "%", 0.f, 100.f);
 		configParam(LPG_COLOR_PARAM, 0.0, 1.0, 0.5, "Lowpass gate response", "%", 0.f, 100.f);
@@ -99,6 +104,8 @@ struct Plaits : Module {
 			stmlib::BufferAllocator allocator(shared_buffer[i], sizeof(shared_buffer[i]));
 			voice[i].Init(&allocator, &user_data);
 		}
+
+		octaveQuantizer.Init(9, 0.01f, false);
 
 		onReset();
 	}
@@ -214,7 +221,20 @@ struct Plaits : Module {
 			if (lowCpu)
 				pitch += std::log2(48000.f * args.sampleTime);
 			// Update patch
-			patch.note = 60.f + pitch * 12.f;
+
+			// Similar implementation to original Plaits ui.cc code.
+			// TODO: check with lowCpu mode.
+			if (frequencyMode == 0) {
+				patch.note = -48.37f + pitch * 15.f;
+			} else if (frequencyMode == 9) {
+				float fineTune = params[FREQ_ROOT_PARAM].getValue() / 4.f;
+				patch.note = 53.f + fineTune * 14.f + 12.f * static_cast<float>(octaveQuantizer.Process(0.5f * pitch / 4.f + 0.5f) - 4.f);
+			} else if (frequencyMode == 10) {
+				patch.note = 60.f + pitch * 12.f;
+			} else {
+				patch.note = static_cast<float>(frequencyMode) * 12.f + pitch * 7.f / 4.f;
+			}
+
 			patch.harmonics = params[HARMONICS_PARAM].getValue();
 			patch.timbre = params[TIMBRE_PARAM].getValue();
 			patch.morph = params[MORPH_PARAM].getValue();
@@ -294,7 +314,7 @@ struct Plaits : Module {
 			}
 	}
 
-	void load(std::string path) {
+	void load(const std::string& path) {
 		loading = true;
 		DEFER({loading = false;});
 		// HACK Sleep 100us so DSP thread is likely to finish processing before we resize the vector
@@ -322,14 +342,13 @@ struct Plaits : Module {
 			// Fail silently
 			return;
 		}
-		std::string path = pathC;
+		const std::string path = pathC;
 		std::free(pathC);
 
  		waveDir = system::getDirectory(path);
 		load(path);
 	}
 };
-
 
 static const std::string modelLabels[24] = {
 	"Classic waveshapes with filter",
@@ -358,9 +377,23 @@ static const std::string modelLabels[24] = {
 	"Analog hi-hat",
 };
 
+static const std::string frequencyModes[11] = {
+	"LFO mode",
+	"C0 +/- 7 semitones",
+	"C1 +/- 7 semitones",
+	"C2 +/- 7 semitones",
+	"C3 +/- 7 semitones",
+	"C4 +/- 7 semitones",
+	"C5 +/- 7 semitones",
+	"C6 +/- 7 semitones",
+	"C7 +/- 7 semitones",
+	"Octaves",
+	"C0 to C8",
+};
 
 struct PlaitsWidget : ModuleWidget {
 	bool lpgMode = false;
+	bool freqRootMode = false;
 
 	PlaitsWidget(Plaits* module) {
 		setModule(module);
@@ -387,6 +420,9 @@ struct PlaitsWidget : ModuleWidget {
 		ParamWidget* decayParam = createParam<Rogan1PSBlue>(mm2px(Vec(42.71716, 49.6562)), module, Plaits::LPG_DECAY_PARAM);
 		decayParam->hide();
 		addParam(decayParam);
+		ParamWidget* freqRootParam = createParam<Rogan3PSRed>(mm2px(Vec(3.1577, 20.21088)), module, Plaits::FREQ_ROOT_PARAM);
+		freqRootParam->hide();
+		addParam(freqRootParam);
 
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.31381, 92.48067)), module, Plaits::ENGINE_INPUT));
 		addInput(createInput<PJ301MPort>(mm2px(Vec(14.75983, 92.48067)), module, Plaits::TIMBRE_INPUT));
@@ -422,6 +458,21 @@ struct PlaitsWidget : ModuleWidget {
 			[=](bool val) {this->setLpgMode(val);}
 		));
 
+		menu->addChild(new MenuSeparator);
+
+		menu->addChild(createSubmenuItem("Frequency mode", "", [=](Menu* menu) {
+			for (int i = 0; i < 11; i++) {
+			menu->addChild(createCheckMenuItem(frequencyModes[i], "",
+				[=]() {return module->frequencyMode == i;},
+				[=]() {module->frequencyMode = i;}
+			));
+		}
+		}));
+
+		menu->addChild(createBoolMenuItem("Edit frequency root", "",
+			[=]() {return this->getFreqRootMode();},
+			[=](bool val) {this->setFreqRootMode(val);}
+		));
 
 		menu->addChild(new MenuSeparator);
 
@@ -484,6 +535,25 @@ struct PlaitsWidget : ModuleWidget {
 
 	bool getLpgMode() {
 		return this->lpgMode;
+	}
+
+	void setFreqRootMode(bool freqRootMode) {
+		// ModuleWidget::getParam() doesn't work if the ModuleWidget doesn't have a module.
+		if (!module)
+			return;
+		if (freqRootMode) {
+			getParam(Plaits::FREQ_PARAM)->hide();
+			getParam(Plaits::FREQ_ROOT_PARAM)->show();
+		}
+		else {
+			getParam(Plaits::FREQ_PARAM)->show();
+			getParam(Plaits::FREQ_ROOT_PARAM)->hide();
+		}
+		this->freqRootMode = freqRootMode;
+	}
+
+	bool getFreqRootMode() {
+		return this->freqRootMode;
 	}
 };
 
