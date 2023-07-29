@@ -119,6 +119,12 @@ struct Plaits : Module {
 		json_object_set_new(rootJ, "lowCpu", json_boolean(lowCpu));
 		json_object_set_new(rootJ, "model", json_integer(patch.engine));
 
+		const uint8_t* userDataBuffer = user_data.getBuffer();
+		if (userDataBuffer != nullptr) {
+			std::string userDataString = rack::string::toBase64(userDataBuffer, plaits::UserData::MAX_USER_DATA_SIZE);
+			json_object_set_new(rootJ, "userData", json_string(userDataString.c_str()));
+		}
+
 		return rootJ;
 	}
 
@@ -130,6 +136,16 @@ struct Plaits : Module {
 		json_t* modelJ = json_object_get(rootJ, "model");
 		if (modelJ)
 			patch.engine = json_integer_value(modelJ);
+
+		json_t* userDataJ = json_object_get(rootJ, "userData");
+		if (userDataJ) {
+			std::string userDataString = json_string_value(userDataJ);
+			const std::vector<uint8_t> userDataVector = rack::string::fromBase64(userDataString);
+			if (userDataVector.size() > 0) {
+				const uint8_t* userDataBuffer = &userDataVector[0];
+				user_data.setBuffer(userDataBuffer);
+			}
+		}
 
 		// Legacy <=1.0.2
 		json_t* lpgColorJ = json_object_get(rootJ, "lpgColor");

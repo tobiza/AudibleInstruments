@@ -38,18 +38,27 @@
 namespace plaits {
 
 class UserData {
-private:
+public:
   static const size_t MAX_USER_DATA_SIZE = 4096; // 0x1000
 
-  uint8_t m_buffer[MAX_USER_DATA_SIZE];
-
-public:
   UserData() {
     for (size_t i = 0; i < MAX_USER_DATA_SIZE; ++i) {
       m_buffer[i] = 0;
     }
   }
   ~UserData() { }
+
+  inline void setBuffer(const uint8_t* buffer) {
+    memcpy(m_buffer, buffer, MAX_USER_DATA_SIZE * sizeof(uint8_t));
+  }
+
+  inline const uint8_t* getBuffer() {
+    if (m_buffer[MAX_USER_DATA_SIZE - 2] == 'U') {
+      return m_buffer;
+    } else {
+      return NULL;
+    }
+  }
 
   inline const uint8_t* ptr(int slot) const {
     if (m_buffer[MAX_USER_DATA_SIZE - 2] == 'U' && m_buffer[MAX_USER_DATA_SIZE - 1] == (' ' + slot)) {
@@ -60,17 +69,14 @@ public:
   }
   
   inline bool Save(uint8_t* rx_buffer, int slot) {
-    // TODO: adapt the plaits editor to write this into the bin file.
-    // Currently it is only written into the wav file.
-    /*if (slot < rx_buffer[SIZE - 2] || slot > rx_buffer[SIZE - 1]) {
-      return false;
-    }*/
-
     if (rx_buffer == NULL) {
       for (size_t i = 0; i < MAX_USER_DATA_SIZE; ++i) {
         m_buffer[i] = 0;
       }
     } else {
+      if (slot < rx_buffer[MAX_USER_DATA_SIZE - 2] || slot > rx_buffer[MAX_USER_DATA_SIZE - 1]) {
+        return false;
+      }
       memcpy(m_buffer, rx_buffer, MAX_USER_DATA_SIZE * sizeof(uint8_t));
       m_buffer[MAX_USER_DATA_SIZE - 2] = 'U';
       m_buffer[MAX_USER_DATA_SIZE - 1] = ' ' + slot;
@@ -78,6 +84,10 @@ public:
 
     return true;
   }
+
+private:
+  uint8_t m_buffer[MAX_USER_DATA_SIZE];
+
 };
 
 }  // namespace plaits
